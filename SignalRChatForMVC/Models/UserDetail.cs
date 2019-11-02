@@ -22,6 +22,10 @@ namespace SignalRChatForMVC.Model
         /// 消息总数
         /// </summary>
         public int MessageCount { get; set; }
+        /// <summary>
+        /// 当前标识
+        /// </summary>
+        public string Token { get; set; }
     }
 
 
@@ -41,6 +45,8 @@ namespace SignalRChatForMVC.Model
         ///用户的消息
         /// </summary>
         public ICollection<Message> MessageList { get; set; }
+        public string Token { get; set; }
+        public string UserName { get; set; }
     }
 
     public class Message

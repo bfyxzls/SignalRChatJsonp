@@ -17,5 +17,7 @@ namespace SignalRChatForMVC.Model
         /// </summary>
         public string Message { get; set; }
 
+        public string Token { get; set; }
+
     }
 }

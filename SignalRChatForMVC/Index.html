@@ -31,6 +31,8 @@
 
         //注册客户端事件
         function registerEvents(chatHub) {
+
+            //用户登陆
             $("#btn").click(function () {
                 $.ajax({
                     type: "GET",
@@ -39,19 +41,25 @@
                     jsonpCallback: "flightHandler",
                     data: { userName: $("#userName").val(), password: $("#password").val() },
                     success: function (data) {
-                        if(data.flag)
-                           chatHub.server.connect(data.token);
-                        else
-                           console.log("error");
+                        if (data.flag) {
+                            console.log(data.token)
+                            chatHub.server.connect(data.token);
+                        }
+                        else {
+                            alert("登陆失败")
+                            console.log("error");
+                        }
 
                     }
                 })
             });
 
+            //登出
             $("#logOut").click(function () {
                 chatHub.server.exit($("#loginUserID").html());
             });
 
+            //发消息
             $("#sendmessage").click(function () {
                 chatHub.server.message($("#loginUserID").html(), $("#toUser").val(), $("#message").val());
             });
@@ -60,22 +68,22 @@
         //注册客户端方法
         function registerClientMethods(chatHub) {
 
-            chatHub.client.onConnected = function (id, userID, url) {
+            chatHub.client.onConnected = function (id, token, url) {
                 console.log("与服务器建立了链接,链接ID" + id);
             }
 
-            chatHub.client.onUserDisconnected = function (id, userID) {
+            chatHub.client.onUserDisconnected = function (id, token) {
                 console.log("与服务器取消了链接");
             }
 
-            chatHub.client.onNewUserConnected = function (userID) {
+            chatHub.client.onNewUserConnected = function (token) {
                 $("#login").hide();
                 $("#logout").show();
-                $("#loginUserID").html(userID);
+                $("#loginUserID").html(token);
 
             }
 
-            chatHub.client.onExistUserConnected = function (id, userID) {
+            chatHub.client.onExistUserConnected = function (id, token) {
                 alert("用户" + userID + "已经登陆！");
             }
 
@@ -86,7 +94,8 @@
             chatHub.client.onUserList = function (allUsers) {
                 $("#userList").empty();
                 for (i = 0; i < allUsers.length; i++) {
-                    $("#userList").append("连接ＩＤ：" + allUsers[i].ConnectionId + "，用户ＩＤ：" + allUsers[i].UserID + "<br/>");
+                    $("#userList").append("连接ID：" + allUsers[i].ConnectionId + "，用户标识：" + allUsers[i].Token + "，用户昵称：" + allUsers[i].UserName + "<br/>");
+                    $("#toUser").append("<option value='" + allUsers[i].Token + "'>" + allUsers[i].UserName + "</option>");
                 }
             }
             chatHub.client.onMessage = function (count) {
@@ -124,7 +133,11 @@
         <div>您有(<span id="xiaoxi">0</span>)个新消息</div>
         <div id="messageList"></div>
         <hr />
-        <input id="logOut" type="button" value="登出" class="submitButton" /> <input id="toUser" type="text" value="给谁发" /><input type="text" value="发的内容" id="message" /><input type="button" id="sendmessage" value="为他发消息" />
+        <input id="logOut" type="button" value="登出" class="submitButton" />
+        发给谁：
+        <select id="toUser"></select>
+        <input type="text" value="发的内容" id="message" />
+        <input type="button" id="sendmessage" value="为他发消息" />
 
     </div>
 </body>

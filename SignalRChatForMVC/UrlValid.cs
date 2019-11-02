@@ -1,13 +1,10 @@
 ﻿using Microsoft.AspNet.SignalR;
 using Microsoft.AspNet.SignalR.Hubs;
-using SignalR.Core.Model;
 using SignalRChatForMVC.Model;
+using SignalRChatForMVC.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Web;
 
 namespace SignalRChatForMVC
 {
@@ -17,49 +14,46 @@ namespace SignalRChatForMVC
     {
         static List<CurrentUser> ConnectedUsers = new List<CurrentUser>();
 
-        public void Connect(string userID)
+        public void Connect(string token)
         {
             var id = Context.ConnectionId;
-            if (ConnectedUsers.Count(x => x.UserID == userID) == 0)
+            var entity = TokenContext.GetUserByToken(token);
+            if (ConnectedUsers.Count(x => x.Token == token) == 0)
             {
                 ConnectedUsers.Add(new CurrentUser
                 {
                     ConnectionId = id,
-                    UserID = userID,
+                    Token = token,
+                    UserID = entity.UserID,
+                    UserName = entity.UserName
                 });
-                // Clients.Caller.onConnected(id, userID, url);
-                // Clients.AllExcept(id).onNewUserConnected(id, userID);//向所有客户端发请求,除了当前用户之外
-                Clients.All.onNewUserConnected(userID);
+                Clients.All.onNewUserConnected(token);
                 Clients.All.onUserList(ConnectedUsers);
-                Clients.All.onConnected(id, userID, null);
-                // Clients.Client(id).onNewUserConnected(id, userID, ConnectedUsers);//向指定客户端发请求
+                Clients.All.onConnected(id, token, null);
             }
             else
             {
 
-                //  Clients.Caller.onConnected(id, userID, url);
-                Clients.Client(id).onExistUserConnected(id, userID);
-                // Clients.AllExcept(id).onExistUserConnected(id, userID);
+                Clients.Client(id).onExistUserConnected(id, token);
             }
         }
 
         /// <summary>
         /// 登出
         /// </summary>
-        public void Exit(string userID)
+        public void Exit(string token)
         {
             var id = Context.ConnectionId;
 
             OnDisconnected();
-            //    Clients.Caller.onConnected(id, userID, "");
             Clients.All.onUserList(ConnectedUsers);
-            Clients.Client(id).onExit(userID);
+            Clients.Client(id).onExit(token);
         }
 
         public void Message(string fromUser, string toUser, string message)
         {
             var id = Context.ConnectionId;
-            var toConnection = ConnectedUsers.FirstOrDefault(x => x.UserID == toUser);
+            var toConnection = ConnectedUsers.FirstOrDefault(x => x.Token == toUser);
             if (toConnection == null)
             {
                 Clients.Client(id).onMessageError("你的接收方不在线...");
@@ -91,7 +85,7 @@ namespace SignalRChatForMVC
                 ConnectedUsers.Remove(item);
 
                 var id = Context.ConnectionId;
-                Clients.All.onUserDisconnected(id, item.UserID);
+                Clients.All.onUserDisconnected(id, item.Token);
 
             }
             return base.OnDisconnected();

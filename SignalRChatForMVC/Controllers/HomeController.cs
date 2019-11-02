@@ -8,8 +8,7 @@ namespace SignalRChatForMVC.Controllers
 {
     public class HomeController : Controller
     {
-        static List<UserDetail> UserBase = new List<UserDetail>();
-        static Dictionary<string, UserDetail> TokenList = new Dictionary<string, UserDetail>();
+        public static List<UserDetail> UserBase = new List<UserDetail>();
         static HomeController()
         {
             UserBase.Add(new UserDetail { UserID = "1", UserName = "zzl", Password = "123456" });
@@ -54,13 +53,12 @@ namespace SignalRChatForMVC.Controllers
             if (entity != null)
             {
                 string token = Guid.NewGuid().ToString();
-                TokenList.Add(Guid.NewGuid().ToString(), entity);
-                return this.Jsonp(new { flag = true, token = token });
+                TokenContext.SetToken(token, entity);
+                return this.Jsonp(new { flag = true, token = token, loginName = entity.UserName });
             }
             else
             {
                 return this.Jsonp(new { flag = false, message = "用户名密码错误" });
-
             }
         }
         /// <summary>
@@ -71,12 +69,7 @@ namespace SignalRChatForMVC.Controllers
         [HttpGet]
         public JsonpResult GetUser(string token)
         {
-            if (!TokenList.ContainsKey(token))
-            {
-                return this.Jsonp(new { flag = false, message = "token不存在" });
-
-            }
-            return this.Jsonp(TokenList[token]);
+            return this.Jsonp(TokenContext.GetUserByToken(token));
         }
     }
 }
