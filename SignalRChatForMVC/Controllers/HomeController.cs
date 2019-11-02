@@ -1,5 +1,6 @@
 ﻿using SignalRChatForMVC.Model;
 using SignalRChatForMVC.Utils;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web.Mvc;
@@ -8,6 +9,7 @@ namespace SignalRChatForMVC.Controllers
     public class HomeController : Controller
     {
         static List<UserDetail> UserBase = new List<UserDetail>();
+        static Dictionary<string, UserDetail> TokenList = new Dictionary<string, UserDetail>();
         static HomeController()
         {
             UserBase.Add(new UserDetail { UserID = "1", UserName = "zzl", Password = "123456" });
@@ -38,12 +40,43 @@ namespace SignalRChatForMVC.Controllers
             ModelState.AddModelError("", "用户名密码不正确...");
             return View();
         }
+        /// <summary>
+        /// 用户名密码登陆，返回token
+        /// </summary>
+        /// <param name="userName"></param>
+        /// <param name="password"></param>
+        /// <returns></returns>
         [HttpGet]
         public JsonpResult AjaxLogin(string userName, string password)
         {
             var entity = UserBase.FirstOrDefault(i => i.UserName == userName
                && i.Password == password);
-            return this.Jsonp(entity);
+            if (entity != null)
+            {
+                string token = Guid.NewGuid().ToString();
+                TokenList.Add(Guid.NewGuid().ToString(), entity);
+                return this.Jsonp(new { flag = true, token = token });
+            }
+            else
+            {
+                return this.Jsonp(new { flag = false, message = "用户名密码错误" });
+
+            }
+        }
+        /// <summary>
+        /// 通过token获取当前登陆的用户
+        /// </summary>
+        /// <param name="token"></param>
+        /// <returns></returns>
+        [HttpGet]
+        public JsonpResult GetUser(string token)
+        {
+            if (!TokenList.ContainsKey(token))
+            {
+                return this.Jsonp(new { flag = false, message = "token不存在" });
+
+            }
+            return this.Jsonp(TokenList[token]);
         }
     }
 }

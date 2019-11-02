@@ -36,11 +36,14 @@
                     type: "GET",
                     dataType: "jsonp",
                     url: "http://www.lind.com/home/AjaxLogin",
-                    jsonpCallback: "flightHandler",//自定义的jsonp回调函数名称，默认为jQuery自动生成的随机函数名，也可以写"?"，jQuery会自动为你处理数据
+                    jsonpCallback: "flightHandler",
                     data: { userName: $("#userName").val(), password: $("#password").val() },
                     success: function (data) {
-                        console.log("userId:" + data.UserID);
-                        chatHub.server.connect(data.UserID);
+                        if(data.flag)
+                           chatHub.server.connect(data.token);
+                        else
+                           console.log("error");
+
                     }
                 })
             });
